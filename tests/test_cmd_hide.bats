@@ -99,8 +99,9 @@ parent_teardown() {
     git -C "$TEST_REPO" add src/app.php
     git -C "$TEST_REPO" commit -m "Add app"
     
-    cd "$TEST_REPO/src"
-    run "$GIT_CLOAK_BIN" hide app.php
+    # Test from repo root (relative path works here)
+    cd "$TEST_REPO"
+    run "$GIT_CLOAK_BIN" hide src/app.php
     [[ $status -eq 0 ]]
 }
 

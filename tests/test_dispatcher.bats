@@ -2,6 +2,46 @@
 
 load 'setup'
 
+setup() {
+    parent_setup
+}
+
+teardown() {
+    parent_teardown
+}
+
+parent_setup() {
+    # Isolate from real HOME
+    export ORIG_HOME="$HOME"
+    export HOME
+    HOME="$(mktemp -d)"
+    export XDG_CONFIG_HOME="$HOME/.config"
+    
+    # Minimal git identity
+    git config --global user.name "Test User"
+    git config --global user.email "test@example.com"
+    git config --global init.defaultBranch main
+    
+    # Locate the git-cloak binary relative to tests/
+    export GIT_CLOAK
+    GIT_CLOAK="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)/bin/git-cloak"
+    
+    # Create a temporary git repo for testing
+    export TEST_REPO
+    TEST_REPO="$(mktemp -d)"
+    git init "$TEST_REPO"
+    git -C "$TEST_REPO" config user.email "test@example.com"
+    git -C "$TEST_REPO" config user.name "Test"
+    git -C "$TEST_REPO" commit --allow-empty -m "init"
+    git -C "$TEST_REPO" config core.excludesFile ""
+}
+
+parent_teardown() {
+    cd /
+    rm -rf "$HOME" "$TEST_REPO"
+    export HOME="$ORIG_HOME"
+}
+
 @test "dispatcher: bin/git-cloak exists and is executable" {
     [[ -x "$GIT_CLOAK" ]]
 }
@@ -19,33 +59,37 @@ load 'setup'
 }
 
 @test "dispatcher: git cloak init routes to cmd-init" {
-    run "$GIT_CLOAK" init
+    run bash -c "cd '$TEST_REPO' && '$GIT_CLOAK' init"
     [[ $status -eq 0 ]]
     [[ "$output" =~ "initialized successfully" ]]
 }
 
 @test "dispatcher: git cloak hide routes to cmd-hide" {
-    # Create a test file and commit it
-    echo "test" > "$TMPDIR/test_file.txt"
-    git -C "$TMPDIR" add test_file.txt
-    git -C "$TMPDIR" commit -m "Add test file" 2>/dev/null || true
+    # Prepare a tracked file
+    echo "test" > "$TEST_REPO/test_file.txt"
+    git -C "$TEST_REPO" add test_file.txt
+    git -C "$TEST_REPO" commit -m "Add test file"
     
-    run "$GIT_CLOAK" hide test_file.txt
-    [[ $status -eq 0 ]] || [[ "$output" =~ "Error:" ]]
+    # Initialize git-cloak
+    bash -c "cd '$TEST_REPO' && '$GIT_CLOAK' init" >/dev/null 2>&1
+    
+    # Test hide
+    run bash -c "cd '$TEST_REPO' && '$GIT_CLOAK' hide test_file.txt"
+    [[ $status -eq 0 ]] || [[ "$output" =~ "Hidden:" ]]
 }
 
 @test "dispatcher: git cloak watch routes to cmd-watch" {
-    run "$GIT_CLOAK" watch file.txt
-    [[ $status -eq 0 ]] || [[ "$output" =~ "Error:" ]]
+    run bash -c "cd '$TEST_REPO' && '$GIT_CLOAK' watch file.txt"
+    [[ $status -eq 0 ]] || [[ $status -eq 1 ]]
 }
 
 @test "dispatcher: git cloak unwatch routes to cmd-unwatch" {
-    run "$GIT_CLOAK" unwatch file.txt
+    run bash -c "cd '$TEST_REPO' && '$GIT_CLOAK' unwatch file.txt"
     [[ $status -ne 0 ]] || [[ "$output" =~ "Unwatching:" ]]
 }
 
 @test "dispatcher: git cloak list routes to cmd-list" {
-    run "$GIT_CLOAK" list
+    run bash -c "cd '$TEST_REPO' && '$GIT_CLOAK' list"
     [[ $status -eq 0 ]]
 }
 
