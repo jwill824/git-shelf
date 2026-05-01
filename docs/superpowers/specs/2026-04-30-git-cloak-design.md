@@ -57,7 +57,7 @@ git-cloak/
 │   ├── cmd-watch.sh
 │   ├── cmd-unwatch.sh
 │   ├── cmd-list.sh
-│   ├── cmd-co.sh
+│   ├── cmd-switch.sh
 │   ├── cmd-refresh.sh
 │   ├── cmd-merge-main.sh
 │   ├── cmd-sync.sh
@@ -82,7 +82,7 @@ brew tap <user>/tap
 brew install git-cloak
 ```
 
-Homebrew installs `bin/git-cloak` and creates symlinks for each alias command (`git-hide`, `git-watch`, `git-unwatch`, `git-co`, `git-refresh`, `git-merge-main`, `git-sync`, `git-monitor`). All commands are available in every terminal session.
+Homebrew installs `bin/git-cloak` only. All functionality is accessed via `git cloak <command>`. No individual alias scripts are installed.
 
 ### Local workspace install (direnv)
 
@@ -96,19 +96,13 @@ Commands are only active when direnv has loaded that workspace — useful for is
 
 ---
 
-## Dispatcher + `$0` Routing
+## Dispatcher
 
-`bin/git-cloak` is the single entry point. Alias commands (e.g. `git-hide`, `git-watch`) are **symlinks pointing to `git-cloak`**. The script detects whether it was invoked as an alias (via `$0`) or as the primary dispatcher (via `$1`):
+`bin/git-cloak` is the single entry point. Subcommands are passed as the first argument — `git cloak <command>`. Because `git-cloak` is in PATH, git routes `git cloak` to it automatically.
 
 ```zsh
 #!/usr/bin/env zsh
-_self="${${0:t}#git-}"          # strip "git-" prefix: "git-hide" → "hide"
-
-if [[ "$_self" == "cloak" ]]; then
-  _cmd="$1"; shift              # dispatched as: git cloak <cmd> [args]
-else
-  _cmd="$_self"                 # invoked as alias: git-hide [args]
-fi
+_cmd="$1"; shift
 
 _LIB="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/../lib"
 source "$_LIB/common.sh"
@@ -119,44 +113,34 @@ case "$_cmd" in
   watch)       source "$_LIB/cmd-watch.sh" ;;
   unwatch)     source "$_LIB/cmd-unwatch.sh" ;;
   list)        source "$_LIB/cmd-list.sh" ;;
-  co)          source "$_LIB/cmd-co.sh" ;;
+  switch)      source "$_LIB/cmd-switch.sh" ;;
   refresh)     source "$_LIB/cmd-refresh.sh" ;;
   merge-main)  source "$_LIB/cmd-merge-main.sh" ;;
   sync)        source "$_LIB/cmd-sync.sh" ;;
   monitor)     source "$_LIB/cmd-monitor.sh" ;;
   *)           echo "Usage: git cloak <command> [args]"
-               echo "Commands: init, hide, watch, unwatch, list, co, refresh, merge-main, sync, monitor"
+               echo "Commands: init, hide, watch, unwatch, list, switch, refresh, merge-main, sync, monitor"
                exit 1 ;;
 esac
 ```
-
-Both `git cloak hide <pattern>` and `git hide <pattern>` call the same logic.
 
 ---
 
 ## Path Resolution (`common.sh`)
 
 ```zsh
-# 1. Find the target git repo root
-if [[ -n "$GIT_PROJECT_ROOT" ]]; then
-  _PROJECT_DIR="$GIT_PROJECT_ROOT"
-else
-  _PROJECT_DIR="$(git rev-parse --show-toplevel 2>/dev/null)"
-  if [[ -z "$_PROJECT_DIR" ]]; then
-    echo "Error: not inside a git repository. Run 'git cloak init' first."
-    exit 1
-  fi
+# 1. Find the target git repo root (auto-detected from cwd)
+_PROJECT_DIR="$(git rev-parse --show-toplevel 2>/dev/null)"
+if [[ -z "$_PROJECT_DIR" ]]; then
+  echo "Error: not inside a git repository."
+  exit 1
 fi
 
-# 2. Find the workspace root — must have a .git-cloak/ dir (definitive marker)
-# Falls back to checking .envrc for GIT_PROJECT_ROOT as a secondary signal
+# 2. Find the workspace root — .git-cloak/ is the definitive marker
 _WORKSPACE_DIR=""
 _dir="$(dirname "$_PROJECT_DIR")"
 while [[ "$_dir" != "/" ]]; do
   if [[ -d "$_dir/.git-cloak" ]]; then
-    _WORKSPACE_DIR="$_dir"
-    break
-  elif [[ -f "$_dir/.envrc" ]] && grep -q 'GIT_PROJECT_ROOT' "$_dir/.envrc" 2>/dev/null; then
     _WORKSPACE_DIR="$_dir"
     break
   fi
@@ -169,7 +153,7 @@ _WORKSPACE_CLOAK_DIR="${_WORKSPACE_DIR:+$_WORKSPACE_DIR/.git-cloak}"
 _GLOBAL_CLOAK_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/git-cloak"
 ```
 
-`GIT_PROJECT_ROOT` is only needed when running commands from a workspace directory that is not itself a git repo (e.g. `cd jumpmind && git cloak list`). When already inside a git repo, it is auto-detected and `GIT_PROJECT_ROOT` is ignored.
+The workspace root is identified solely by the presence of a `.git-cloak/` directory — created by `git cloak init --workspace`. No environment variables are used for path resolution.
 
 ---
 
@@ -183,15 +167,12 @@ git cloak init
 ```
 - Creates `.git/personal/` directory
 - Sets `core.excludesFile` to `.git/personal/ignore` in the repo's local git config
-- Optionally installs git hooks (see below)
 
 ### In a workspace root (workspace scope)
 ```bash
 git cloak init --workspace
 ```
-- Creates `.git-cloak/` directory in the workspace
-- Checks for an existing `.envrc`; if present, appends `GIT_PROJECT_ROOT` if not already set
-- Prompts user to run `direnv allow` if `.envrc` was modified
+- Creates `.git-cloak/` directory in the workspace — this is the definitive workspace marker
 - When a repo under the workspace is later initialized, its `core.excludesFile` is set to point to the workspace `.git-cloak/ignore`
 
 ### Global
@@ -203,36 +184,36 @@ git cloak init --global
 
 ---
 
-## `git hide` — Scoped Ignore Patterns
+## `git cloak hide` — Scoped Ignore Patterns
 
 Adds a pattern to the appropriate scope's ignore file.
 
 ```bash
-git hide "*.local-backup"            # auto-detect scope (workspace if present, else project)
-git hide --project ".env.local"      # project scope only
-git hide --workspace "*.local-backup"# workspace scope
-git hide --global ".DS_Store"        # global scope
+git cloak hide "*.local-backup"             # auto-detect scope (workspace if present, else project)
+git cloak hide --project ".env.local"       # project scope only
+git cloak hide --workspace "*.local-backup" # workspace scope
+git cloak hide --global ".DS_Store"         # global scope
 ```
 
 On first use, if `core.excludesFile` is not yet configured for the target scope, the command configures it automatically.
 
 ---
 
-## `git watch` / `git unwatch` — Skip-Worktree
+## `git cloak watch` / `git cloak unwatch` — Skip-Worktree
 
 Always project-scoped (skip-worktree is a git index concept).
 
 ```bash
-git watch path/to/file.yml       # mark file as skip-worktree
-git unwatch path/to/file.yml     # remove skip-worktree
-git list                          # show all skip-worktree files + active ignore patterns
+git cloak watch path/to/file.yml     # mark file as skip-worktree
+git cloak unwatch path/to/file.yml   # remove skip-worktree
+git cloak list                        # show all skip-worktree files + active ignore patterns
 ```
 
 ---
 
 ## Safe Branch Operations
 
-`git cloak co`, `git cloak refresh`, and `git cloak merge-main` all share the same lifecycle to safely handle skip-worktree files:
+`git cloak switch`, `git cloak refresh`, and `git cloak merge-main` all share the same lifecycle to safely handle skip-worktree files:
 
 1. Collect all skip-worktree files
 2. Clear `skip-worktree` on all of them (so git can operate freely)
@@ -246,72 +227,53 @@ git list                          # show all skip-worktree files + active ignore
 8. Unstage everything
 
 ```bash
-git cloak co <branch>         # safe branch switch
+git cloak switch <branch>     # safe branch switch
 git cloak refresh             # safe pull on current branch
 git cloak merge-main          # safe merge of origin/main into current branch
 ```
 
 After manually resolving a monitored-file conflict:
 ```bash
-git cloak co --restore-watch
+git cloak switch --restore-watch
 git cloak refresh --restore-watch
 git cloak merge-main --restore-watch
 ```
 
----
-
-## Git Hooks (Optional)
-
-`git cloak init --hooks` installs lightweight hooks into `.git/hooks/` as a safety net for users who run native git commands directly. These hooks only handle the **re-apply** step (post-operation); they do not perform the stash dance (no `pre-checkout` hook exists in git).
-
-| Hook | Trigger | Action |
-|---|---|---|
-| `post-checkout` | `git checkout` | Re-apply skip-worktree |
-| `post-merge` | `git pull` / `git merge` | Re-apply skip-worktree |
-| `post-rewrite` | `git rebase` / `git commit --amend` | Re-apply skip-worktree |
-
-**Important:** These hooks provide a safety net, not full protection. The safe stash dance (which prevents conflicts during the operation) is only available via the `git cloak` commands. Users who want full safety should use `git cloak co` / `git cloak refresh` / `git cloak merge-main`.
-
----
-
-## `git monitor` — Conflict Watch List
+## `git cloak monitor` — Conflict Watch List
 
 Manages the per-project list of files that trigger a manual review pause during branch operations (instead of auto-resolving in your favor).
 
 ```bash
-git monitor add path/to/file.yml
-git monitor remove path/to/file.yml
-git monitor list
+git cloak monitor add path/to/file.yml
+git cloak monitor remove path/to/file.yml
+git cloak monitor list
 ```
 
 Watch list is stored at `.git/personal/watch-list`.
 
 ---
 
-## `git sync` — Pull Upstream for a Skip-Worktree File
+## `git cloak sync` — Pull Upstream for a Skip-Worktree File
 
 When a skip-worktree file has upstream changes you want to review and merge into your local version:
 
 ```bash
-git sync path/to/file.yml
+git cloak sync path/to/file.yml
 ```
 
 Saves your local version as `<file>.local-backup`, fetches the upstream version, shows a diff, and re-applies skip-worktree.
 
 ---
 
-## `.envrc` Integration
+## Installation via direnv (local workspace)
 
-`git cloak init --workspace` appends to an existing `.envrc` (or creates one):
+Clone git-cloak into a workspace or tools directory and add to the `.envrc`:
 
 ```bash
-# git-cloak workspace config
-export GIT_PROJECT_ROOT="$PWD/commerce"
+PATH_add bin   # adds git-cloak/bin to PATH when direnv loads this directory
 ```
 
-`GIT_PERSONAL_DIR` is not written to `.envrc` — personal config is always discovered automatically (workspace `.git-cloak/` or project `.git/personal/`).
-
-`.envrc.example` ships with the repo as a reference template.
+This is the local workspace install path — useful for isolated environments, per-client tool versions, or contributing to git-cloak itself. No git dotfiles or cloak configuration are written to `.envrc`.
 
 ---
 
@@ -328,10 +290,6 @@ class GitCloak < Formula
   def install
     bin.install "bin/git-cloak"
     (lib/"git-cloak").install Dir["lib/*.sh"]
-
-    %w[hide watch unwatch list co refresh merge-main sync monitor].each do |cmd|
-      bin.install_symlink "git-cloak" => "git-#{cmd}"
-    end
   end
 
   def caveats
@@ -348,7 +306,7 @@ end
 ## Migration from Existing jumpmind Setup
 
 1. Install git-cloak via Homebrew (or local workspace install)
-2. Remove `bin/` from `~/Developer/jumpmind` (scripts now come from Homebrew)
-3. Run `git cloak init --workspace` from `~/Developer/jumpmind` — it detects the existing `.envrc` and `.gitignore`, migrates patterns to `.git-cloak/ignore`, and configures `GIT_PROJECT_ROOT`
+2. Remove `bin/` from `~/Developer/jumpmind` (scripts now come from Homebrew / git-cloak)
+3. Run `git cloak init --workspace` from `~/Developer/jumpmind` — creates `.git-cloak/` and migrates existing `.gitignore` patterns into it
 4. Run `git cloak init` from `~/Developer/jumpmind/commerce` — wires up `core.excludesFile` to the workspace ignore file
 5. Existing skip-worktree state in the `commerce` index is untouched — no re-setup needed
