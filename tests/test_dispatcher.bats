@@ -21,7 +21,7 @@ load 'setup'
 @test "dispatcher: git cloak init routes to cmd-init" {
     run "$GIT_CLOAK" init
     [[ $status -eq 0 ]]
-    [[ "$output" =~ "TODO: Implement git cloak init" ]]
+    [[ "$output" =~ "initialized successfully" ]]
 }
 
 @test "dispatcher: git cloak hide routes to cmd-hide" {
