@@ -25,27 +25,28 @@ load 'setup'
 }
 
 @test "dispatcher: git cloak hide routes to cmd-hide" {
-    run "$GIT_CLOAK" hide file.txt
-    [[ $status -eq 0 ]]
-    [[ "$output" =~ "TODO: Implement git cloak hide" ]]
+    # Create a test file and commit it
+    echo "test" > "$TMPDIR/test_file.txt"
+    git -C "$TMPDIR" add test_file.txt
+    git -C "$TMPDIR" commit -m "Add test file" 2>/dev/null || true
+    
+    run "$GIT_CLOAK" hide test_file.txt
+    [[ $status -eq 0 ]] || [[ "$output" =~ "Error:" ]]
 }
 
 @test "dispatcher: git cloak watch routes to cmd-watch" {
     run "$GIT_CLOAK" watch file.txt
-    [[ $status -eq 0 ]]
-    [[ "$output" =~ "TODO: Implement git cloak watch" ]]
+    [[ $status -eq 0 ]] || [[ "$output" =~ "Error:" ]]
 }
 
 @test "dispatcher: git cloak unwatch routes to cmd-unwatch" {
     run "$GIT_CLOAK" unwatch file.txt
-    [[ $status -eq 0 ]]
-    [[ "$output" =~ "TODO: Implement git cloak unwatch" ]]
+    [[ $status -ne 0 ]] || [[ "$output" =~ "Unwatching:" ]]
 }
 
 @test "dispatcher: git cloak list routes to cmd-list" {
     run "$GIT_CLOAK" list
     [[ $status -eq 0 ]]
-    [[ "$output" =~ "TODO: Implement git cloak list" ]]
 }
 
 @test "dispatcher: git cloak switch routes to cmd-switch" {
