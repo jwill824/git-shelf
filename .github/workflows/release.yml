@@ -27,8 +27,67 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: semantic-release
       
-      - name: Upload release artifacts
+      - name: Update Homebrew tap
+        if: success()
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          # Extract version from the release tag
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0")
+          VERSION=${VERSION#v}  # Remove 'v' prefix
+          
+          # Download the release tarball and calculate SHA256
+          TARBALL_URL="https://github.com/thingstead/git-cloak/archive/refs/tags/v${VERSION}.tar.gz"
+          SHA256=$(curl -sL "$TARBALL_URL" | shasum -a 256 | cut -d' ' -f1)
+          
+          echo "Version: $VERSION"
+          echo "SHA256: $SHA256"
+          echo "Tarball URL: $TARBALL_URL"
+          
+          # Clone the tap repository
+          git clone https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/thingstead/homebrew-tap.git tap-repo
+          cd tap-repo
+          
+          # Update the formula
+          cat > Formula/git-cloak.rb << FORMULA
+class GitCloak < Formula
+  desc "Personal file overlay manager for git — hide local changes, stay in sync"
+  homepage "https://github.com/thingstead/git-cloak"
+  url "https://github.com/thingstead/git-cloak/archive/refs/tags/v${VERSION}.tar.gz"
+  sha256 "${SHA256}"
+  license "MIT"
+
+  def install
+    bin.install "bin/git-cloak"
+    (lib/"git-cloak").install Dir["lib/*.sh"]
+  end
+
+  def caveats
+    <<~EOS
+      Run 'git cloak init' inside any repo to get started.
+      For workspace setups, run 'git cloak init --workspace' from the workspace root first.
+      For global setup, run 'git cloak init --global'.
+    EOS
+  end
+
+  test do
+    system "#{bin}/git-cloak", "--help"
+  end
+end
+FORMULA
+          
+          # Commit and push
+          git config user.name "Semantic Release Bot"
+          git config user.email "bot@thingstead.com"
+          git add Formula/git-cloak.rb
+          git commit -m "chore(homebrew): bump git-cloak to v${VERSION}" || echo "No changes to commit"
+          git push origin main
+          
+          echo "✅ Homebrew tap updated successfully"
+      
+      - name: Release summary
         if: success()
         run: |
           echo "✅ Release completed successfully"
-          echo "Check GitHub releases for the new version"
+          echo "📦 GitHub Release: https://github.com/thingstead/git-cloak/releases"
+          echo "🍺 Install with: brew tap thingstead/homebrew-tap && brew install git-cloak"

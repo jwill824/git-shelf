@@ -1,9 +1,9 @@
 class GitCloak < Formula
   desc "Personal file overlay manager for git — hide local changes, stay in sync"
-  homepage "https://github.com/jumpmind/git-cloak"
-  # url and sha256 filled in at release time:
-  # url "https://github.com/jumpmind/git-cloak/archive/refs/tags/v0.1.0.tar.gz"
-  # sha256 "<sha256>"
+  homepage "https://github.com/thingstead/git-cloak"
+  # url and sha256 are automatically updated by the release workflow
+  # url "https://github.com/thingstead/git-cloak/archive/refs/tags/v0.1.0.tar.gz"
+  # sha256 "<calculated at release time>"
   license "MIT"
 
   def install
