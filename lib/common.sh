@@ -6,7 +6,7 @@
 # Sets global: _PROJECT_ROOT
 _resolve_project_root() {
     local result
-    result=$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)
+    result=$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || echo "")
     if [[ -z "$result" ]]; then
         _PROJECT_ROOT="$PWD"
     else
