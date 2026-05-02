@@ -9,9 +9,9 @@ The release workflow now **automatically updates** the Homebrew tap whenever you
 ### 1. Create the Tap Repository
 
 ```bash
-# Create new GitHub repo: thingstead/homebrew-tap
+# Create new GitHub repo: jwill824/homebrew-tap
 
-git clone https://github.com/thingstead/homebrew-tap.git
+git clone https://github.com/jwill824/homebrew-tap.git
 cd homebrew-tap
 
 mkdir -p Formula
@@ -48,12 +48,12 @@ The workflow automatically:
 2. ✅ Runs linter
 3. ✅ Bumps version (semantic-release)
 4. ✅ Creates GitHub release
-5. ✅ **Updates thingstead/homebrew-tap with new formula**
+5. ✅ **Updates jwill824/homebrew-tap with new formula**
 
 ## Users Install With
 
 ```bash
-brew tap thingstead/homebrew-tap
+brew tap jwill824/homebrew-tap
 brew install git-cloak
 
 # Update later with
@@ -68,7 +68,7 @@ For each release, the workflow:
 - Calculates SHA256
 - Updates `Formula/git-cloak.rb` in the tap
 - Commits: `chore(homebrew): bump git-cloak to vX.Y.Z`
-- Pushes to `thingstead/homebrew-tap`
+- Pushes to `jwill824/homebrew-tap`
 
 ## Troubleshooting
 

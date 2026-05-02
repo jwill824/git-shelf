@@ -5,7 +5,7 @@ Yes! A single Homebrew tap repository can contain **multiple formulas**. This is
 ## Structure
 
 ```
-thingstead/homebrew-tap/
+jwill824/homebrew-tap/
 ├── Formula/
 │   ├── git-cloak.rb
 │   ├── other-tool.rb
@@ -23,7 +23,7 @@ With multiple formulas in one tap:
 
 ```bash
 # Install the tap once
-brew tap thingstead/homebrew-tap
+brew tap jwill824/homebrew-tap
 
 # Then users can install any formula from that tap
 brew install git-cloak
@@ -40,12 +40,12 @@ brew upgrade
 ### Manual: Create the formula file
 
 ```bash
-cd thingstead/homebrew-tap
+cd jwill824/homebrew-tap
 cat > Formula/my-new-tool.rb << 'EOF'
 class MyNewTool < Formula
   desc "My awesome tool"
-  homepage "https://github.com/thingstead/my-new-tool"
-  url "https://github.com/thingstead/my-new-tool/archive/refs/tags/v1.0.0.tar.gz"
+  homepage "https://github.com/jwill824/my-new-tool"
+  url "https://github.com/jwill824/my-new-tool/archive/refs/tags/v1.0.0.tar.gz"
   sha256 "abc123def456..."
   license "MIT"
 
@@ -86,11 +86,11 @@ Each repository (git-cloak, other-tool, etc.) can have its own release workflow 
     FORMULA_NAME="${FORMULA_NAME:0:1}$(echo ${FORMULA_NAME:1} | tr '[:upper:]' '[:lower:]')"
     
     # Calculate SHA256
-    TARBALL_URL="https://github.com/thingstead/${REPO_NAME}/archive/refs/tags/v${VERSION}.tar.gz"
+    TARBALL_URL="https://github.com/jwill824/${REPO_NAME}/archive/refs/tags/v${VERSION}.tar.gz"
     SHA256=$(curl -sL "$TARBALL_URL" | shasum -a 256 | cut -d' ' -f1)
     
     # Clone and update
-    git clone https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/thingstead/homebrew-tap.git tap-repo
+    git clone https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/jwill824/homebrew-tap.git tap-repo
     cd tap-repo
     
     # Update or create the formula
@@ -120,7 +120,7 @@ my-utils/         → updates Formula/my-utils.rb
 
 Installation:
 ```bash
-brew tap thingstead/homebrew-tap
+brew tap jwill824/homebrew-tap
 brew install git-cloak my-api-tool my-cli-tool my-utils
 ```
 
@@ -137,7 +137,7 @@ Formula/
 
 Users:
 ```bash
-brew tap thingstead/homebrew-tap
+brew tap jwill824/homebrew-tap
 brew install git-cloak              # Latest stable
 brew install git-cloak@edge         # Development version
 ```
@@ -155,7 +155,7 @@ end
 # Formula/git-cloak.rb
 class GitCloak < BaseTool
   desc "Personal file overlay for git"
-  homepage "https://github.com/thingstead/git-cloak"
+  homepage "https://github.com/jwill824/git-cloak"
   url "..."
 end
 ```
@@ -179,7 +179,7 @@ git-cloak --version
 
 ## Managing the Tap
 
-### README template for thingstead/homebrew-tap:
+### README template for jwill824/homebrew-tap:
 
 ```markdown
 # Thingstead Homebrew Tap
@@ -189,7 +189,7 @@ A collection of useful tools from Thingstead.
 ## Installation
 
 ```bash
-brew tap thingstead/homebrew-tap
+brew tap jwill824/homebrew-tap
 brew install git-cloak
 brew install other-tool
 ```
@@ -211,7 +211,7 @@ brew upgrade
 
 ```bash
 brew uninstall git-cloak
-brew untap thingstead/homebrew-tap
+brew untap jwill824/homebrew-tap
 ```
 ```
 
@@ -243,7 +243,7 @@ A: Yes, but the tap repo must be public. Use private source code repositories in
 A: Use Homebrew's `depends_on` in formulas. Example:
 ```ruby
 depends_on "git"
-depends_on "thingstead/homebrew-tap/git-cloak"
+depends_on "jwill824/homebrew-tap/git-cloak"
 ```
 
 ## Resources

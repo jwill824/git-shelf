@@ -6,8 +6,8 @@ This document explains how to set up and use the Homebrew distribution for git-c
 
 git-cloak uses a **Homebrew tap** for distribution. A tap is a Git repository containing Homebrew formulas.
 
-- **Tap repository:** `thingstead/homebrew-tap` (separate repo)
-- **Install command:** `brew tap thingstead/homebrew-tap && brew install git-cloak`
+- **Tap repository:** `jwill824/homebrew-tap` (separate repo)
+- **Install command:** `brew tap jwill824/homebrew-tap && brew install git-cloak`
 - **Updates:** Automatic when you push releases to main branch
 
 ## Setup Instructions
@@ -17,10 +17,10 @@ git-cloak uses a **Homebrew tap** for distribution. A tap is a Git repository co
 Create a new GitHub repository named `homebrew-tap` under your account (thingstead):
 
 ```bash
-# On GitHub, create a new repo: thingstead/homebrew-tap
+# On GitHub, create a new repo: jwill824/homebrew-tap
 
 # Clone it locally
-git clone https://github.com/thingstead/homebrew-tap.git
+git clone https://github.com/jwill824/homebrew-tap.git
 cd homebrew-tap
 
 # Create the Formula directory
@@ -62,11 +62,11 @@ The release workflow now:
      - New version number
      - New tarball URL
      - New SHA256
-   - Commits and pushes to `thingstead/homebrew-tap`
+   - Commits and pushes to `jwill824/homebrew-tap`
 
 2. **Installation for users:**
    ```bash
-   brew tap thingstead/homebrew-tap
+   brew tap jwill824/homebrew-tap
    brew install git-cloak
    
    # Update to latest
@@ -88,10 +88,10 @@ git push origin main
 #    - semantic-release detects "feat" → bumps minor version
 #    - Creates v0.2.0 release
 #    - Updates Formula/git-cloak.rb with v0.2.0 + SHA256
-#    - Pushes to thingstead/homebrew-tap
+#    - Pushes to jwill824/homebrew-tap
 #
 # Users can now:
-# brew tap thingstead/homebrew-tap
+# brew tap jwill824/homebrew-tap
 # brew install git-cloak  # Gets v0.2.0
 ```
 
@@ -102,8 +102,8 @@ If the automatic update fails, you can manually update `Formula/git-cloak.rb`:
 ```ruby
 class GitCloak < Formula
   desc "Personal file overlay manager for git — hide local changes, stay in sync"
-  homepage "https://github.com/thingstead/git-cloak"
-  url "https://github.com/thingstead/git-cloak/archive/refs/tags/vX.Y.Z.tar.gz"
+  homepage "https://github.com/jwill824/git-cloak"
+  url "https://github.com/jwill824/git-cloak/archive/refs/tags/vX.Y.Z.tar.gz"
   sha256 "<paste-sha256-here>"
   license "MIT"
 
@@ -129,7 +129,7 @@ end
 To get SHA256:
 ```bash
 VERSION="0.2.0"
-curl -sL https://github.com/thingstead/git-cloak/archive/refs/tags/v${VERSION}.tar.gz | shasum -a 256
+curl -sL https://github.com/jwill824/git-cloak/archive/refs/tags/v${VERSION}.tar.gz | shasum -a 256
 ```
 
 ## Troubleshooting
@@ -143,8 +143,8 @@ curl -sL https://github.com/thingstead/git-cloak/archive/refs/tags/v${VERSION}.t
 - Re-commit to the tap
 
 **"Tap not found when users install"**
-- Ensure `thingstead/homebrew-tap` is public on GitHub
-- Test locally: `brew tap thingstead/homebrew-tap`
+- Ensure `jwill824/homebrew-tap` is public on GitHub
+- Test locally: `brew tap jwill824/homebrew-tap`
 
 ## Resources
 
