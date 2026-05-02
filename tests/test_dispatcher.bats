@@ -108,7 +108,7 @@ parent_teardown() {
 @test "dispatcher: git cloak merge-main routes to cmd-merge-main" {
     run "$GIT_CLOAK" merge-main
     [[ $status -eq 0 ]]
-    [[ "$output" =~ "TODO: Implement git cloak merge-main" ]]
+    [[ "$output" =~ "Merge complete" ]]
 }
 
 @test "dispatcher: git cloak sync routes to cmd-sync" {
