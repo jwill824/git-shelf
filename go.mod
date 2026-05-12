@@ -1,4 +1,4 @@
-module github.com/thingstead/git-shelf
+module github.com/jwill824/git-shelf
 
 go 1.26.3
 

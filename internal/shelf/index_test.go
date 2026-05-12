@@ -3,7 +3,7 @@ package shelf_test
 import (
 	"testing"
 
-	"github.com/thingstead/git-shelf/internal/shelf"
+	"github.com/jwill824/git-shelf/internal/shelf"
 )
 
 func TestIndexRoundTrip(t *testing.T) {

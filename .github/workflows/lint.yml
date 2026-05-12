@@ -7,23 +7,18 @@ on:
     branches: [ main ]
 
 jobs:
-  shellcheck:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Run shellcheck
-        run: |
-          # Install shellcheck
-          apt-get update && apt-get install -y shellcheck
-          
-          # Run shellcheck on all shell scripts
-          shellcheck bin/git-cloak lib/*.sh || exit 1
-          
-          echo "✅ All shell scripts pass shellcheck"
-      
-      - name: Check shell script formatting
-        run: |
-          # Check that all shell scripts are executable
-          [[ -x bin/git-cloak ]] || (echo "bin/git-cloak is not executable" && exit 1)
-          echo "✅ Scripts are properly formatted"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: go vet
+        run: go vet ./...
+
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest

@@ -8,18 +8,13 @@ on:
 
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Install dependencies
-        run: |
-          brew install bats-core
-      
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
       - name: Run tests
-        run: make test
-      
-      - name: Report test results
-        if: always()
-        run: |
-          echo "Test suite completed"
+        run: go test ./...

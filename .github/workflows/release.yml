@@ -7,94 +7,80 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
-      
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-      
-      - name: Install dependencies
-        run: npm install -g semantic-release @semantic-release/changelog @semantic-release/git
-      
+          node-version: 20
+
+      - name: Install semantic-release
+        run: npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github conventional-changelog-conventionalcommits
+
       - name: Run semantic-release
+        id: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: semantic-release
-      
+
       - name: Update Homebrew tap
-        if: success()
+        if: steps.release.outcome == 'success'
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
-          # Extract version from the release tag
-          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0")
-          VERSION=${VERSION#v}  # Remove 'v' prefix
-          
-          # Get repository name (e.g., git-cloak from jwill824/git-cloak)
-          REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
-          
-          # Download the release tarball and calculate SHA256
-          TARBALL_URL="https://github.com/$GITHUB_REPOSITORY/archive/refs/tags/v${VERSION}.tar.gz"
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
+          if [ -z "$VERSION" ]; then
+            echo "No release tag found, skipping tap update"
+            exit 0
+          fi
+
+          TARBALL_URL="https://github.com/jwill824/git-shelf/archive/refs/tags/v${VERSION}.tar.gz"
           SHA256=$(curl -sL "$TARBALL_URL" | shasum -a 256 | cut -d' ' -f1)
-          
-          echo "Repository: $REPO_NAME"
-          echo "Version: $VERSION"
-          echo "SHA256: $SHA256"
-          echo "Tarball URL: $TARBALL_URL"
-          
-          # Clone the tap repository
+
           git clone https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/jwill824/homebrew-tap.git tap-repo
           cd tap-repo
-          
-          # Update the formula (reusable for any repo in thingstead org)
-          # Note: This template is customized for git-cloak; adapt for other tools
-          cat > Formula/${REPO_NAME}.rb << FORMULA
-class GitCloak < Formula
-  desc "Personal file overlay manager for git — hide local changes, stay in sync"
-  homepage "https://github.com/thingstead/${REPO_NAME}"
-  url "https://github.com/thingstead/${REPO_NAME}/archive/refs/tags/v${VERSION}.tar.gz"
+
+          cat > Formula/git-shelf.rb << FORMULA
+class GitShelf < Formula
+  desc "Personal file overlay manager for git — shelf local changes across branch switches"
+  homepage "https://github.com/jwill824/git-shelf"
+  url "${TARBALL_URL}"
   sha256 "${SHA256}"
+  version "${VERSION}"
   license "MIT"
 
+  depends_on "go" => :build
+
   def install
-    bin.install "bin/git-cloak"
-    (lib/"git-cloak").install Dir["lib/*.sh"]
+    system "go", "build", *std_go_args(ldflags: "-s -w"), "./cmd/git-shelf"
   end
 
   def caveats
     <<~EOS
-      Run 'git cloak init' inside any repo to get started.
-      For workspace setups, run 'git cloak init --workspace' from the workspace root first.
-      For global setup, run 'git cloak init --global'.
+      Run 'git shelf init' inside any repo to get started.
     EOS
   end
 
   test do
-    system "#{bin}/git-cloak", "--help"
+    system "#{bin}/git-shelf", "--help"
   end
 end
 FORMULA
-          
-          # Commit and push
-          git config user.name "Semantic Release Bot"
-          git config user.email "bot@thingstead.com"
-          git add Formula/${REPO_NAME}.rb
-          git commit -m "chore(homebrew): bump ${REPO_NAME} to v${VERSION}" || echo "No changes to commit"
+
+          git config user.name "Release Bot"
+          git config user.email "bot@jwill824.com"
+          git add Formula/git-shelf.rb
+          git commit -m "chore: bump git-shelf to v${VERSION}" || echo "No changes to commit"
           git push origin main
-          
-          echo "✅ Homebrew tap updated: Formula/${REPO_NAME}.rb → v${VERSION}"
-          echo "📦 Install with: brew tap jwill824/homebrew-tap && brew install ${REPO_NAME}"
-      
-      - name: Release summary
-        if: success()
-        run: |
-          echo "✅ Release completed successfully"
-          echo "📦 GitHub Release: https://github.com/$GITHUB_REPOSITORY/releases"
-          REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
-          echo "🍺 Install with: brew tap jwill824/homebrew-tap && brew install ${REPO_NAME}"

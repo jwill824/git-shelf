@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/thingstead/git-shelf/internal/git"
+	"github.com/jwill824/git-shelf/internal/git"
 )
 
 // ConflictInfo describes a shelved file whose upstream version has diverged.

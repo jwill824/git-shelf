@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/thingstead/git-shelf/internal/shelf"
+	"github.com/jwill824/git-shelf/internal/shelf"
 )
 
 func TestInstallHooks(t *testing.T) {

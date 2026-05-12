@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/thingstead/git-shelf/internal/git"
+	"github.com/jwill824/git-shelf/internal/git"
 )
 
 func initTempRepo(t *testing.T) string {

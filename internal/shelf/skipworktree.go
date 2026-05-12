@@ -3,7 +3,7 @@ package shelf
 import (
 	"fmt"
 
-	"github.com/thingstead/git-shelf/internal/git"
+	"github.com/jwill824/git-shelf/internal/git"
 )
 
 // SetSkipWorktree marks a tracked file so git ignores local changes.

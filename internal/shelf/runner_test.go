@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/thingstead/git-shelf/internal/git"
-	"github.com/thingstead/git-shelf/internal/shelf"
+	"github.com/jwill824/git-shelf/internal/git"
+	"github.com/jwill824/git-shelf/internal/shelf"
 )
 
 func commitFile(t *testing.T, repo *git.Repo, name, content string) {

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/thingstead/git-shelf/internal/git"
-	"github.com/thingstead/git-shelf/internal/shelf"
+	"github.com/jwill824/git-shelf/internal/git"
+	"github.com/jwill824/git-shelf/internal/shelf"
 )
 
 var removeCmd = &cobra.Command{

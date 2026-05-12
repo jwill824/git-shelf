@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/thingstead/git-shelf/internal/git"
+	"github.com/jwill824/git-shelf/internal/git"
 )
 
 // HashObject writes file content to the git object store and returns its SHA.
