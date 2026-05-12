@@ -1,6 +1,6 @@
 class GitShelf < Formula
   desc "Personal file overlay manager for git — shelf local changes across branch switches"
-  homepage "https://github.com/thingstead/git-shelf"
+  homepage "https://github.com/jwill824/git-shelf"
   license "MIT"
 
   depends_on "go" => :build
