@@ -35,7 +35,9 @@ func runRemove(_ *cobra.Command, args []string) error {
 	}
 
 	if entry.Type == shelf.EntryTypeTracked {
-		shelf.ClearSkipWorktree(repo, filePath)
+		if err := shelf.ClearSkipWorktree(repo, filePath); err != nil {
+		return fmt.Errorf("clear skip-worktree: %w", err)
+	}
 		// Restore the repo's HEAD version
 		if _, err := repo.Run("checkout", "HEAD", "--", filePath); err != nil {
 			return fmt.Errorf("restore repo version: %w", err)

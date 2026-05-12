@@ -87,21 +87,31 @@ func applyResolutions(repo *git.Repo, resolutions []tui.Resolution, entries []sh
 			entry.BaseBlob = r.Conflict.UpstreamBlob
 			allEntries, _ := shelf.ReadIndex(repo.GitDir)
 			allEntries = shelf.AddEntry(allEntries, entry)
-			shelf.WriteIndex(repo.GitDir, allEntries)
-			shelf.RestoreEntries(repo, []shelf.Entry{entry})
+			if err := shelf.WriteIndex(repo.GitDir, allEntries); err != nil {
+				return err
+			}
+			if err := shelf.RestoreEntries(repo, []shelf.Entry{entry}); err != nil {
+				return err
+			}
 		case tui.ActionOpenEditor:
 			personalContent, _ := shelf.CatFileBlob(repo, r.Conflict.PersonalBlob)
 			upstreamContent, _ := shelf.CatFileBlob(repo, r.Conflict.UpstreamBlob)
 			resolved, err := tui.OpenEditorForConflict(r.Conflict, personalContent, upstreamContent)
 			if err == nil && resolved != nil {
 				dest := filepath.Join(repo.Root, entry.Path)
-				os.WriteFile(dest, resolved, 0644)
+				if err := os.WriteFile(dest, resolved, 0644); err != nil {
+					return err
+				}
 				newBlob, _ := shelf.HashObject(repo, entry.Path)
 				entry.PersonalBlob = newBlob
 				allEntries, _ := shelf.ReadIndex(repo.GitDir)
 				allEntries = shelf.AddEntry(allEntries, entry)
-				shelf.WriteIndex(repo.GitDir, allEntries)
-				shelf.SetSkipWorktree(repo, entry.Path)
+				if err := shelf.WriteIndex(repo.GitDir, allEntries); err != nil {
+					return err
+				}
+				if err := shelf.SetSkipWorktree(repo, entry.Path); err != nil {
+					return err
+				}
 			}
 		}
 	}

@@ -130,7 +130,7 @@ func showDiff(c Conflict) {
 	cmd := exec.Command("git", "diff", c.PersonalBlob, c.UpstreamBlob)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Run()
+	cmd.Run() //nolint:errcheck // display only; errors shown on stderr
 }
 
 // OpenEditorForConflict writes both versions to temp files and opens $EDITOR.
@@ -141,7 +141,9 @@ func OpenEditorForConflict(c Conflict, personalContent, upstreamContent []byte) 
 		return nil, err
 	}
 	defer os.Remove(mine.Name())
-	mine.Write(personalContent)
+	if _, err := mine.Write(personalContent); err != nil {
+		return nil, fmt.Errorf("write temp file: %w", err)
+	}
 	mine.Close()
 
 	theirs, err := os.CreateTemp("", "shelf-theirs-*")
@@ -149,7 +151,9 @@ func OpenEditorForConflict(c Conflict, personalContent, upstreamContent []byte) 
 		return nil, err
 	}
 	defer os.Remove(theirs.Name())
-	theirs.Write(upstreamContent)
+	if _, err := theirs.Write(upstreamContent); err != nil {
+		return nil, fmt.Errorf("write temp file: %w", err)
+	}
 	theirs.Close()
 
 	editor := os.Getenv("GIT_EDITOR")

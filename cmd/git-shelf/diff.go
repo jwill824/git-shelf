@@ -45,7 +45,7 @@ func runDiff(_ *cobra.Command, args []string) error {
 		cmd := exec.Command("git", "-C", repo.Root, "diff", currentBlob, e.PersonalBlob)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		cmd.Run()
+		cmd.Run() //nolint:errcheck // display only; errors shown on stderr
 	}
 	return nil
 }

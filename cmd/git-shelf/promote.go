@@ -44,7 +44,9 @@ func runPromote(_ *cobra.Command, args []string) error {
 	// Clear skip-worktree so git can stage the files
 	for _, e := range entries {
 		if e.Type == shelf.EntryTypeTracked {
-			shelf.ClearSkipWorktree(repo, e.Path)
+			if err := shelf.ClearSkipWorktree(repo, e.Path); err != nil {
+				return fmt.Errorf("clear skip-worktree %s: %w", e.Path, err)
+			}
 		}
 	}
 
@@ -70,7 +72,9 @@ func runPromote(_ *cobra.Command, args []string) error {
 	// Re-apply skip-worktree to restore shelf state
 	for _, e := range entries {
 		if e.Type == shelf.EntryTypeTracked {
-			shelf.SetSkipWorktree(repo, e.Path)
+			if err := shelf.SetSkipWorktree(repo, e.Path); err != nil {
+				return fmt.Errorf("set skip-worktree %s: %w", e.Path, err)
+			}
 		}
 	}
 
@@ -80,13 +84,15 @@ func runPromote(_ *cobra.Command, args []string) error {
 	if _, err := exec.LookPath("gh"); err == nil {
 		fmt.Print("Open a PR now? [y/N] ")
 		var answer string
-		fmt.Scanln(&answer)
+		fmt.Scanln(&answer) //nolint:errcheck // non-critical interactive input
 		if answer == "y" || answer == "Y" {
 			cmd := exec.Command("gh", "pr", "create", "--fill")
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
-			cmd.Run()
+			if err := cmd.Run(); err != nil {
+				fmt.Fprintf(os.Stderr, "gh pr create: %v\n", err)
+			}
 		}
 	}
 
