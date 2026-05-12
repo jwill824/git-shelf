@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/thingstead/git-shelf/internal/git"
@@ -108,5 +109,30 @@ func TestWriteBlob(t *testing.T) {
 	got, _ := os.ReadFile(dest)
 	if string(got) != content {
 		t.Errorf("restored content = %q, want %q", got, content)
+	}
+}
+
+func TestSkipWorktree(t *testing.T) {
+	repo := setupRepo(t)
+	writeFile(t, repo, "tracked.txt", "repo version\n")
+	exec.Command("git", "-C", repo.Root, "add", "tracked.txt").Run()
+	exec.Command("git", "-C", repo.Root, "commit", "-m", "init").Run()
+
+	if err := shelf.SetSkipWorktree(repo, "tracked.txt"); err != nil {
+		t.Fatalf("SetSkipWorktree: %v", err)
+	}
+
+	// Verify flag is set via git ls-files output
+	out, _ := exec.Command("git", "-C", repo.Root, "ls-files", "-v", "tracked.txt").Output()
+	if !strings.HasPrefix(string(out), "S") {
+		t.Errorf("expected skip-worktree flag (S), got: %q", out)
+	}
+
+	if err := shelf.ClearSkipWorktree(repo, "tracked.txt"); err != nil {
+		t.Fatalf("ClearSkipWorktree: %v", err)
+	}
+	out, _ = exec.Command("git", "-C", repo.Root, "ls-files", "-v", "tracked.txt").Output()
+	if strings.HasPrefix(string(out), "S") {
+		t.Errorf("expected no skip-worktree flag after clear, got: %q", out)
 	}
 }
