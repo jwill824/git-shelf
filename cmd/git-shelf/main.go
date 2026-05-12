@@ -13,6 +13,10 @@ var rootCmd = &cobra.Command{
 	Long:  "Shelf specific files at your personal version, persistent across branch switches.",
 }
 
+func init() {
+	rootCmd.AddCommand(hookCmd)
+}
+
 func main() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
