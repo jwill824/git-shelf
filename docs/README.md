@@ -14,7 +14,7 @@ Shelf specific files at your personal version and carry them transparently acros
 ## Installation
 
 ```bash
-brew tap jwill824/tap
+brew tap jwill824/homebrew-tap
 brew install git-shelf
 ```
 

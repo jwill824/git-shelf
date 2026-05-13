@@ -5,7 +5,7 @@ git-shelf is distributed via a [Homebrew tap](https://docs.brew.sh/Taps) at `jwi
 ## Installing
 
 ```bash
-brew tap jwill824/tap
+brew tap jwill824/homebrew-tap
 brew install git-shelf
 ```
 
@@ -20,7 +20,7 @@ brew upgrade git-shelf
 
 ```bash
 brew uninstall git-shelf
-brew untap jwill824/tap
+brew untap jwill824/homebrew-tap
 ```
 
 ---
@@ -78,4 +78,4 @@ jwill824/homebrew-tap/
 └── README.md
 ```
 
-Users install any formula from the tap after a single `brew tap jwill824/tap`.
+Users install any formula from the tap after a single `brew tap jwill824/homebrew-tap`.
