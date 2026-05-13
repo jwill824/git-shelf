@@ -51,32 +51,32 @@ jobs:
           git clone https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/jwill824/homebrew-tap.git tap-repo
           cd tap-repo
 
-          cat > Formula/git-shelf.rb << FORMULA
-class GitShelf < Formula
-  desc "Personal file overlay manager for git — shelf local changes across branch switches"
-  homepage "https://github.com/jwill824/git-shelf"
-  url "${TARBALL_URL}"
-  sha256 "${SHA256}"
-  version "${VERSION}"
-  license "MIT"
-
-  depends_on "go" => :build
-
-  def install
-    system "go", "build", *std_go_args(ldflags: "-s -w"), "./cmd/git-shelf"
-  end
-
-  def caveats
-    <<~EOS
-      Run 'git shelf init' inside any repo to get started.
-    EOS
-  end
-
-  test do
-    system "#{bin}/git-shelf", "--help"
-  end
-end
-FORMULA
+          {
+            echo 'class GitShelf < Formula'
+            echo '  desc "Personal file overlay manager for git"'
+            echo '  homepage "https://github.com/jwill824/git-shelf"'
+            echo "  url \"${TARBALL_URL}\""
+            echo "  sha256 \"${SHA256}\""
+            echo "  version \"${VERSION}\""
+            echo '  license "MIT"'
+            echo ''
+            echo '  depends_on "go" => :build'
+            echo ''
+            echo '  def install'
+            echo '    system "go", "build", *std_go_args(ldflags: "-s -w"), "./cmd/git-shelf"'
+            echo '  end'
+            echo ''
+            echo '  def caveats'
+            echo '    <<~EOS'
+            echo "      Run 'git shelf init' inside any repo to get started."
+            echo '    EOS'
+            echo '  end'
+            echo ''
+            echo '  test do'
+            echo '    system "#{bin}/git-shelf", "--help"'
+            echo '  end'
+            echo 'end'
+          } > Formula/git-shelf.rb
 
           git config user.name "Release Bot"
           git config user.email "bot@jwill824.com"
