@@ -1,6 +1,8 @@
 # git-shelf
 
-Personal file overlay manager for git. Shelf specific files at your personal version and carry them transparently across branch switches — no wrapper commands required.
+> Personal file overlay manager for git — carry your changes across branches without a dedicated branch.
+
+Shelf specific files at your personal version and carry them transparently across branch switches — no wrapper commands required.
 
 ## What it does
 

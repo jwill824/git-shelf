@@ -40,7 +40,9 @@ Releases are driven by [Conventional Commits](https://www.conventionalcommits.or
 
 ### 2. Update the formula
 
-After a release is created, update `Formula/git-shelf.rb` in `jwill824/homebrew-tap` with the new version URL and SHA256:
+The release workflow **automatically** updates `Formula/git-shelf.rb` in `jwill824/homebrew-tap` after each release. No manual steps required.
+
+For manual updates if needed:
 
 ```bash
 VERSION="x.y.z"
@@ -60,7 +62,7 @@ Commit and push to `jwill824/homebrew-tap` — users will get the update on `bre
 
 ### 3. Formula secrets
 
-The release workflow needs a `HOMEBREW_TAP_TOKEN` repository secret (a GitHub PAT with `repo` scope) to push formula updates to the tap automatically.
+The release workflow uses the `GH_TOKEN` repository secret (provisioned via `jwill824/github-repo-factory`) to push formula updates to the tap automatically.
 
 ---
 
