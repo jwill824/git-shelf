@@ -43,12 +43,34 @@ git shelf promote my-changes  # creates branch + commits your version
 gh pr create                  # or: it'll offer to do this for you
 ```
 
+## Carrying a branch's changes across other branches
+
+Use `add-branch` to snapshot every file changed on a branch into the shelf in one step, so you can freely switch to other branches while keeping those changes available.
+
+```bash
+# Shelf everything changed on a feature branch (vs main)
+git shelf add-branch feature/my-changes
+
+# Shelf the current branch's changes vs a different base
+git shelf add-branch --base=develop
+
+# Switch to any other branch — shelved files ride along
+git switch chore/other-work
+git shelf sync              # re-apply if any files need restoring
+
+# When done, switch back — your shelved versions are still in place
+git switch feature/my-changes
+```
+
+`add-branch` targets an explicit ref against `--base` (default: `main`) using the merge-base as the diff anchor, so only the changes unique to that branch are shelved. Deleted files are reported and skipped.
+
 ## Commands
 
 | Command | Description |
 |---|---|
 | `git shelf init` | Install hooks, initialize `.git/personal/` |
 | `git shelf add <file>` | Shelf a file (tracked or untracked) |
+| `git shelf add-branch [<branch>]` | Shelf all changed files on a branch at once |
 | `git shelf remove <file>` | Un-shelf, restore repo version |
 | `git shelf list` | Show shelved files + sync status |
 | `git shelf diff [file]` | Diff personal vs repo version |
